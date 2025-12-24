@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- Image -->
+        <ImageView
+            android:id="@+id/item_image"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginEnd="12dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_background" />
+
+        <!-- Name (Title) -->
+        <TextView
+            android:id="@+id/item_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/item_image"
+            android:text="Item Name"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Price -->
+        <TextView
+            android:id="@+id/item_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/item_name"
+            android:layout_toEndOf="@id/item_image"
+            android:text="$10.00"
+            android:textColor="@color/design_default_color_primary"
+            android:textSize="16sp" />
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/item_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/item_price"
+            android:layout_toEndOf="@id/item_image"
+            android:layout_marginTop="4dp"
+            android:text="This is a short description of the item." />
+
+        <!-- "Take It" Button -->
+        <Button
+            android:id="@+id/take_it_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/item_description"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="8dp"
+            android:text="Take It" />
+
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

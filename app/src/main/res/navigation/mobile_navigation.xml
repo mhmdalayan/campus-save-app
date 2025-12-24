@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_home">  <!-- 1. Make sure this points to your home fragment ID -->
+
+    <!-- 2. This fragment MUST be your FirstFragment -->
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.savecampus.FirstFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_first" >
+
+        <!-- This action allows navigating from FirstFragment to SecondFragment -->
+        <action
+            android:id="@+id/action_FirstFragment_to_SecondFragment"
+            app:destination="@id/secondFragment" />
+    </fragment>
+
+    <!-- This is the destination for the click -->
+    <fragment
+        android:id="@+id/secondFragment"
+        android:name="com.example.savecampus.SecondFragment"
+        android:label="fragment_second"
+        tools:layout="@layout/fragment_second" />
+
+    <!-- Other fragments for the bottom navigation bar -->
+    <fragment
+        android:id="@+id/navigation_dashboard"
+        android:name="com.example.savecampus.ui.dashboard.DashboardFragment"
+        android:label="@string/title_dashboard"
+        tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/navigation_notifications"
+        android:name="com.example.savecampus.ui.notifications.NotificationsFragment"
+        android:label="@string/title_notifications"
+        tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.example.savecampus.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>
