@@ -6,4 +6,8 @@
     </style>
 
     <style name="Theme.SaveCampus" parent="Base.Theme.SaveCampus" />
+    <style name="Theme.SaveCampus.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>

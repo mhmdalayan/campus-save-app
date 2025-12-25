@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Add internet permission if not already present for Volley -->
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,26 +14,33 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SaveCampus"
+        tools:targetApi="31"
+        android:usesCleartextTraffic="true"> <!-- Add this for http://... traffic on modern Android -->
 
-        android:usesCleartextTraffic="true"
-
-        tools:targetApi="31">
-
-        <activity
-            android:name=".RegisterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false" />
+        <!-- MainActivity is now a regular activity -->
         <activity
             android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/title_activity_main"
+            android:theme="@style/Theme.SaveCampus.NoActionBar">
+            <!-- The launcher intent filter has been REMOVED from here -->
+        </activity>
+
+        <!-- LoginActivity is now the LAUNCHER activity -->
+        <activity
+            android:name=".LoginActivity"
             android:exported="true">
+            <!-- The launcher intent filter has been MOVED here -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
 
+        <!-- Your RegisterActivity should also have an entry -->
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
+
+    </application>
 </manifest>
