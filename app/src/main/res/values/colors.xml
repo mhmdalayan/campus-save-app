@@ -2,4 +2,14 @@
     <color name="green">#2E7D32</color>
     <color name="green_light">#A5D6A7</color>
     <color name="white">#FFFFFF</color>
+
+    <!-- 1. ADDED: The missing 'black' color to fix the build error -->
+    <color name="black">#FF000000</color>
+
+    <!-- 2. OPTIONAL: Standard Material Design colors for theming -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
 </resources>

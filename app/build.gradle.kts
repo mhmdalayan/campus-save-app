@@ -15,7 +15,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    buildFeatures {
+        viewBinding = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -32,6 +34,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.cardview:cardview:1.0.0")
 
     implementation(libs.appcompat)
     implementation(libs.material)

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- 1. An Icon for visual interest -->
+    <ImageView
+        android:id="@+id/item_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_launcher_background"
+        app:tint="?attr/colorPrimary"
+        android:contentDescription="Event Icon" />
+
+    <!-- 2. A container for Title and Subtitle -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="16dp">
+
+        <!-- Title Text -->
+        <TextView
+            android:id="@+id/item_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="16sp"
+            tools:text="Event Title" />
+
+        <!-- Subtitle Text -->
+        <TextView
+            android:id="@+id/item_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            tools:text="Event location or date" />
+
+    </LinearLayout>
+
+    <!-- 3. A Chevron icon to indicate it's clickable -->
+    <ImageView
+        android:id="@+id/item_chevron"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="?android:attr/textColorSecondary"
+        android:contentDescription="View Details" />
+
+</LinearLayout>
