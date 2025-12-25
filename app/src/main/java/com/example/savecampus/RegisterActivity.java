@@ -2,6 +2,7 @@ package com.example.savecampus;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Patterns;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -9,11 +10,21 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    // Define password validation patterns as constants
+    // (Keep your password patterns here)
     private static final Pattern PASSWORD_UPPERCASE = Pattern.compile("[A-Z]");
     private static final Pattern PASSWORD_SPECIAL_CHAR = Pattern.compile("[@#]");
 
@@ -24,63 +35,100 @@ public class RegisterActivity extends AppCompatActivity {
 
         TextView tvRegister = findViewById(R.id.btnRegister);
         EditText etEmail = findViewById(R.id.etEmail);
-        // Get the new password EditText from the layout
+        EditText etUsername = findViewById(R.id.etUserName);
         EditText etPassword = findViewById(R.id.etPassword);
 
-        tvRegister.setOnClickListener( v -> {
+        tvRegister.setOnClickListener(v -> {
             String email = etEmail.getText().toString().trim();
+            String username = etUsername.getText().toString().trim(); // <-- Add this
             String password = etPassword.getText().toString().trim();
-
-            // Validate email first
+            if (username.isEmpty()) { // <-- Add validation for username
+                etUsername.setError("Username cannot be empty.");
+                return;
+            }
             if (!isValidEmail(email)) {
                 etEmail.setError("Please enter a valid @gmail.com address.");
-                Toast.makeText(RegisterActivity.this, "Invalid email format.", Toast.LENGTH_SHORT).show();
-                return; // Stop the process if email is invalid
+                return;
             }
 
-            // Validate password
             if (!isValidPassword(password)) {
                 etPassword.setError("Password must be at least 8 characters, with one uppercase letter and one special character (@, #).");
-                Toast.makeText(RegisterActivity.this, "Invalid password format.", Toast.LENGTH_LONG).show();
-                return; // Stop the process if password is invalid
+                return;
             }
 
-            // Both email and password are valid, proceed with registration
-            Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-            startActivity(intent);
+            // If validation passes, call the registration method
+            registerUser(email ,username, password);
         });
     }
 
     /**
-     * Validates the email address.
-     *
-     * @param email The email string to validate.
-     * @return true if the email is valid and ends with "@gmail.com", false otherwise.
+     * Sends user credentials to the server for registration.
+     * @param email The user's email.
+     * @param password The user's password.
      */
+    private void registerUser(final String email, final String username, final String password) {
+        // 1. REMOVE the parameters from the URL.
+        // The URL should only point to the script itself.
+        String url = "http://10.0.2.2/mobileApp/adddish.php";
+
+        // Create a new request queue
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        // 2. The request type is already POST, which is correct.
+        // In your registerUser method...
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                // In StringRequest...
+                response -> {
+                    // Restore your JSON parsing logic
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response);
+                        boolean success = jsonResponse.getBoolean("success");
+
+                        if (success) {
+                            Toast.makeText(RegisterActivity.this, "Registration Successful!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                            finish(); // Close the register activity
+                        } else {
+                            String message = jsonResponse.getString("message");
+                            Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {
+                        Log.e("RegisterActivity", "JSON Parsing error: " + e.getMessage());
+                        Toast.makeText(RegisterActivity.this, "Invalid response from server.", Toast.LENGTH_LONG).show();
+                    }
+                },
+                // ...
+
+                error -> { //... the rest of your code remains the same
+
+                    // This block is executed if there's a network error
+                    Log.e("RegisterActivity", "Volley error: " + error.toString());
+                    Toast.makeText(RegisterActivity.this, "Registration failed. Please check your internet connection.", Toast.LENGTH_LONG).show();
+                }) {
+            @Override
+            protected Map<String, String> getParams() {
+                // 3. This part is correct. It sends the email and password in the POST body.
+                Map<String, String> params = new HashMap<>();
+                params.put("email", email);
+                params.put("username", username);
+                params.put("password", password);
+                return params;
+            }
+        };
+
+        // Add the request to the queue to execute it
+        queue.add(stringRequest);
+    }
+
     private boolean isValidEmail(String email) {
         return !email.isEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches() && email.endsWith("@gmail.com");
     }
 
-    /**
-     * Validates the password based on specific criteria.
-     * - At least 8 characters long.
-     * - Contains at least one uppercase letter.
-     * - Contains at least one special character from the set (@, #).
-     *
-     * @param password The password string to validate.
-     * @return true if the password is valid, false otherwise.
-     */
     private boolean isValidPassword(String password) {
-        if (password.length() < 8) {
-            return false; // Check for minimum length
-        }
-        if (!PASSWORD_UPPERCASE.matcher(password).find()) {
-            return false; // Check for an uppercase letter
-        }
-        if (!PASSWORD_SPECIAL_CHAR.matcher(password).find()) {
-            return false; // Check for a special character
-        }
-        return true; // Password is valid
+        if (password.length() < 8) return false;
+        if (!PASSWORD_UPPERCASE.matcher(password).find()) return false;
+        if (!PASSWORD_SPECIAL_CHAR.matcher(password).find()) return false;
+        return true;
     }
 }
