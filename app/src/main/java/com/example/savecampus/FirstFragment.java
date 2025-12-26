@@ -1,76 +1,154 @@
 package com.example.savecampus;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-// We only need to import the R class and the binding class from our package.
-// CampusItem and NewCustomAdapter are found automatically.
-import com.example.savecampus.CampusItem;
-import com.example.savecampus.NewCustomAdapter;
-import com.example.savecampus.R;
-import com.example.savecampus.databinding.FragmentFirstBinding;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class FirstFragment extends Fragment {
 
-    private FragmentFirstBinding binding;
+    private RecyclerView recyclerView;
+    private ItemAdapter adapter;
+    private RequestQueue queue;
+    private JSONArray staticItems; // Store our static items
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        binding = FragmentFirstBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+        // This is correct: it inflates the layout with the button.
+        return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1. Create a list of your new CampusItem objects
-        List<CampusItem> items = new ArrayList<>();
-        // Now R.drawable will be resolved correctly
-        items.add(new CampusItem("Old Textbook", "$15.00", "Slightly used, good condition.", R.drawable.css));
-        items.add(new CampusItem("Desk Lamp", "$10.00", "Works perfectly, bulb included.", R.drawable.js));
-        items.add(new CampusItem("Mini Fridge", "$50.00", "Keeps drinks cold. Great for a dorm room.", R.drawable.php));
-        items.add(new CampusItem("Skateboard", "$25.00", "Barely used, a few scratches.", R.drawable.python));
-        // Add more items here
+        // Initialize Volley
+        queue = Volley.newRequestQueue(requireContext());
 
-        // 2. Create and set the adapter with the new item list
-        // No error here, because NewCustomAdapter is in the same package
-        NewCustomAdapter adapter = new NewCustomAdapter(requireContext(), items);
-        binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.recyclerView.setAdapter(adapter);
+        // Find the RecyclerView from the layout
+        recyclerView = view.findViewById(R.id.rv_items);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // 3. Setup the search filter (this remains the same)
-        binding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                adapter.getFilter().filter(newText);
-                return true;
-            }
+        // Find the FloatingActionButton and set its click listener.
+        FloatingActionButton fab = view.findViewById(R.id.fab_add_item);
+        fab.setOnClickListener(v -> {
+            startActivity(new Intent(getActivity(), AddItemActivity.class));
         });
 
-        // Set the text for the header
-        binding.headerTextView.setText("Items Available on Campus");
+        // **NEW:** Create the static list first
+        createStaticItems();
+
+        // *** THIS IS THE FIX ***
+        // The constructor for ItemAdapter now only takes two arguments.
+        // The extra 'new JSONArray()' has been removed.
+        adapter = new ItemAdapter(requireContext(), item -> {
+            CartManager.getInstance().addItem(item);
+            Toast.makeText(getContext(), "Added to cart", Toast.LENGTH_SHORT).show();
+        });
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
+    public void onResume() {
+        super.onResume();
+        // Fetch data from the server every time the screen is shown.
+        fetchItemsFromServer();
+    }
+
+    /**
+     * NEW: Creates the hard-coded list of 4 items.
+     * These will be combined with the server list later.
+     */
+    private void createStaticItems() {
+        staticItems = new JSONArray();
+        try {
+            // These IDs are negative to avoid any conflict with database IDs
+            staticItems.put(new JSONObject()
+                    .put("id", "-1")
+                    .put("name", "Old Textbook")
+                    .put("price", "15.00")
+                    .put("type", "Slightly used, good condition."));
+
+            staticItems.put(new JSONObject()
+                    .put("id", "-2")
+                    .put("name", "Desk Lamp")
+                    .put("price", "10.00")
+                    .put("type", "Works perfectly, bulb included."));
+
+            staticItems.put(new JSONObject()
+                    .put("id", "-3")
+                    .put("name", "Mini Fridge")
+                    .put("price", "50.00")
+                    .put("type", "Keeps drinks cold. Great for a dorm room."));
+
+            staticItems.put(new JSONObject()
+                    .put("id", "-4")
+                    .put("name", "Skateboard")
+                    .put("price", "25.00")
+                    .put("type", "Barely used, a few scratches."));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void fetchItemsFromServer() {
+        // This URL points to your PHP script to get all items.
+        String url = "http://10.0.2.2/mobileApp/get_items.php";
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    // **NEW:** On success, merge the lists
+                    combineListsAndUpdateAdapter(response);
+                },
+                error -> {
+                    // On failure, still show the static items
+                    Toast.makeText(getContext(), "Couldn't fetch new items. Showing defaults.", Toast.LENGTH_SHORT).show();
+                    adapter.updateData(staticItems);
+                }
+        );
+        // Add the request to the queue to execute it.
+        queue.add(request);
+    }
+
+    /**
+     * NEW: Combines the static list and the server list into one.
+     * @param serverItems The JSONArray that came from the Volley request.
+     */
+    private void combineListsAndUpdateAdapter(JSONArray serverItems) {
+        JSONArray combinedList = new JSONArray();
+        try {
+            // First, add all static items
+            for (int i = 0; i < staticItems.length(); i++) {
+                combinedList.put(staticItems.get(i));
+            }
+            // Second, add all items from the server
+            for (int i = 0; i < serverItems.length(); i++) {
+                combinedList.put(serverItems.get(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        // Finally, update the adapter with the single, combined list
+        adapter.updateData(combinedList);
     }
 }

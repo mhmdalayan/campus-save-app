@@ -3,52 +3,42 @@ package com.example.savecampus;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
-import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import com.example.savecampus.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
+    // The binding variable will hold direct references to all views in your layout.
     private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Inflate layout with ViewBinding
+        // This is correct and necessary to prevent issues with stale cart data.
+        CartManager.getInstance().clearCart();
+
+        // 1. Inflate the layout using the generated binding class.
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+
+        // 2. Set the content view to the root of the inflated layout.
         setContentView(binding.getRoot());
 
-        // Set the Toolbar as the ActionBar
-        setSupportActionBar(binding.toolbar);
-
-        // Setup NavController
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment_activity_main);
-        NavController navController = navHostFragment.getNavController();
-
-        // Define top-level destinations (for AppBar back button handling)
+        // The AppBarConfiguration defines your top-level navigation destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home,
-                R.id.navigation_dashboard,
-                R.id.navigation_notifications,
-                R.id.navigation_profile
-        ).build();
+                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
+                .build();
 
-        // Connect Toolbar with NavController
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        // Find the NavController, which manages fragment transactions within the NavHost.
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
 
-        // Connect BottomNavigationView with NavController
+        // *** THIS IS THE ONLY LINE NEEDED FOR NAVIGATION SETUP ***
+        // It connects the NavController to your BottomNavigationView.
+        // We use 'binding.navView' which is the safe, direct reference to the
+        // BottomNavigationView with the ID 'nav_view' in your XML.
+        // The problematic 'findViewById' is completely removed.
         NavigationUI.setupWithNavController(binding.navView, navController);
-    }
-
-    // Handle Up button in Toolbar
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment_activity_main);
-        NavController navController = navHostFragment.getNavController();
-        return navController.navigateUp() || super.onSupportNavigateUp();
     }
 }

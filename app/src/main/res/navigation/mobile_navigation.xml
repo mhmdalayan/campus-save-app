@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">  <!-- 1. Make sure this points to your home fragment ID -->
+    app:startDestination="@+id/navigation_home">
 
-    <!-- 2. This fragment MUST be your FirstFragment -->
+    <!-- Fragment 1: Home Screen -->
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.savecampus.FirstFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_first" >
+        tools:layout="@layout/fragment_home">
 
         <!-- This action allows navigating from FirstFragment to SecondFragment -->
         <action
@@ -18,30 +18,32 @@
             app:destination="@id/secondFragment" />
     </fragment>
 
-    <!-- This is the destination for the click -->
+    <!-- Fragment 2: Second Screen -->
     <fragment
         android:id="@+id/secondFragment"
         android:name="com.example.savecampus.SecondFragment"
         android:label="fragment_second"
         tools:layout="@layout/fragment_second" />
 
-    <!-- Other fragments for the bottom navigation bar -->
+    <!-- Fragment 3: Dashboard -->
     <fragment
         android:id="@+id/navigation_dashboard"
         android:name="com.example.savecampus.ui.dashboard.DashboardFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
+    <!-- Fragment 4: Notifications -->
     <fragment
         android:id="@+id/navigation_notifications"
         android:name="com.example.savecampus.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
 
+    <!-- Fragment 5: Profile -->
     <fragment
         android:id="@+id/navigation_profile"
         android:name="com.example.savecampus.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 
-</navigation>
+</navigation> <!-- The single, correct closing tag for the entire file -->

@@ -13,4 +13,21 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string-array name="dishTypes">
+        <item>Food</item>
+        <item>Electronics</item>
+        <item>Book</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- ADD THIS STRING ARRAY FOR THE SPINNER -->
+    <string-array name="item_types">
+        <item>Book</item>
+        <item>Electronics</item>
+        <item>Furniture</item>
+        <item>Clothing</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- <string name="title_dashboard">Add Item</string> -->
 </resources>
