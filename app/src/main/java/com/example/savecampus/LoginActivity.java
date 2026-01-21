@@ -75,9 +75,13 @@ public class LoginActivity extends AppCompatActivity {
                             Toast.makeText(LoginActivity.this, "Welcome, " + username + "!", Toast.LENGTH_SHORT).show();
 
                             // Save the email to SharedPreferences to check permissions later
-                            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                            prefs.edit().putString("logged_in_email", email).apply();
-
+//                            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+//                            prefs.edit().putString("logged_in_email", email).apply();
+                            SharedPreferences prefs = getSharedPreferences("SaveCampusPrefs", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putString("logged_in_email", email);
+                            editor.putString("username", username); // <--- ADD THIS LINE
+                            editor.apply();
                             // Navigate to your main app screen (e.g., MainActivity or HomeActivity)
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             // Optional: Clear the activity stack so the user can't go back to the login screen

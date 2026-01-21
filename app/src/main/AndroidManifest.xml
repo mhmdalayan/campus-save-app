@@ -4,6 +4,7 @@
 
     <!-- Add internet permission if not already present for Volley -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
