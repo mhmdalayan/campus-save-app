@@ -69,7 +69,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void registerUser(final String email, final String username, final String password) {
         // 1. REMOVE the parameters from the URL.
         // The URL should only point to the script itself.
-        String url = "http://10.0.2.2/mobileApp/adddish.php";
+        String url = "http://10.0.2.2/mobileApp/register.php";
 
         // Create a new request queue
         RequestQueue queue = Volley.newRequestQueue(this);

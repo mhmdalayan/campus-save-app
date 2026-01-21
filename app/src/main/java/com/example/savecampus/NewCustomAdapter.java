@@ -55,6 +55,13 @@ public class NewCustomAdapter extends RecyclerView.Adapter<NewCustomAdapter.View
         return itemList.size();
     }
 
+    public void addItem(CampusItem item) {
+        // Add to both the master list and the filtered list to ensure consistency
+        itemListFull.add(0, item);
+        itemList.add(0, item);
+        notifyItemInserted(0); // Efficiently notify the adapter of the new item at the top
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final ImageView itemImage;
         public final TextView itemName;

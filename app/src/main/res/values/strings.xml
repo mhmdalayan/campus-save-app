@@ -3,6 +3,11 @@
     <string name="action_settings">Settings</string>
     <!--  Strings used for fragments for navigation  -->
     <string name="title_activity_main">MainActivity</string>
+    <string name="add_item">Add Item</string>
+    <string name="hint_item_name">Item Name</string>
+    <string name="hint_item_price">Price (e.g., $10.00)</string>
+    <string name="hint_item_desc">Description</string>
+    <string name="btn_submit">Submit Item</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
