@@ -1,6 +1,7 @@
 package com.example.savecampus;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -72,6 +73,10 @@ public class LoginActivity extends AppCompatActivity {
                             // Login was successful
                             String username = jsonResponse.getString("username");
                             Toast.makeText(LoginActivity.this, "Welcome, " + username + "!", Toast.LENGTH_SHORT).show();
+
+                            // Save the email to SharedPreferences to check permissions later
+                            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                            prefs.edit().putString("logged_in_email", email).apply();
 
                             // Navigate to your main app screen (e.g., MainActivity or HomeActivity)
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);

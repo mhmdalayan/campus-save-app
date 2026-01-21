@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:padding="24dp">
 
     <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Add New Item"
         android:textSize="24sp"
-        android:textStyle="bold"
+        android:textStyle="bold" />
 
     <EditText
+        android:id="@+id/etItemName"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textCapWords"
+        android:hint="Item Name"
+        android:inputType="textCapWords" />
 
     <EditText
+        android:id="@+id/etItemPrice"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="Price (e.g. $10)"
+        android:inputType="text" />
 
+    <EditText
+        android:id="@+id/etDescription"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="Description" />
 
     <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Save Item" />
+
+</LinearLayout>
