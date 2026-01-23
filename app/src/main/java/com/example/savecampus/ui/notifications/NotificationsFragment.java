@@ -15,8 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.savecampus.R;
-import com.example.savecampus.databinding.FragmentNotificationsBinding;
-import com.example.savecampus.databinding.NotificationItemBinding;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,7 +92,7 @@ public class NotificationsFragment extends Fragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.notification_item, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
             return new ViewHolder(view);
         }
 
@@ -112,7 +110,7 @@ public class NotificationsFragment extends Fragment {
             final TextView textView;
             ViewHolder(View view) {
                 super(view);
-                textView = view.findViewById(R.id.notificationTextView);
+                textView = view.findViewById(android.R.id.text1);
             }
         }
     }

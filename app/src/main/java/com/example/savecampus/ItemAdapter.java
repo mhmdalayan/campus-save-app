@@ -8,7 +8,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import org.json.JSONArray;
@@ -34,7 +33,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
     @NonNull
     @Override
     public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_view, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.row, parent, false);
         return new ItemViewHolder(view);
     }
 
@@ -84,14 +83,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
             }
         }
 
-        // Use DiffUtil to find the difference between the old list and the new one
-        final ItemDiffCallback diffCallback = new ItemDiffCallback(this.items, newItemsList);
-        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
-
-        // Update the internal list and dispatch the changes to the RecyclerView
         this.items.clear();
         this.items.addAll(newItemsList);
-        diffResult.dispatchUpdatesTo(this);
+        notifyDataSetChanged();
     }
 
     /**
@@ -101,6 +95,16 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
      */
     public void removeItem(JSONObject itemToRemove) {
         if (itemToRemove == null) return;
+
+        // 1. Try to remove by object reference (Most reliable)
+        int index = items.indexOf(itemToRemove);
+        if (index != -1) {
+            items.remove(index);
+            notifyItemRemoved(index);
+            notifyItemRangeChanged(index, items.size());
+            return;
+        }
+
         try {
             String idToRemove = itemToRemove.getString("id");
             for (int i = 0; i < items.size(); i++) {
@@ -108,53 +112,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
                 if (currentId.equals(idToRemove)) {
                     items.remove(i);
                     notifyItemRemoved(i); // Animate the removal
+                    notifyItemRangeChanged(i, items.size()); // Update positions of items below
                     return; // Item found and removed, exit the method
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * Inner class that helps DiffUtil calculate the differences between two lists.
-     * This is essential for efficient RecyclerView updates.
-     */
-    public static class ItemDiffCallback extends DiffUtil.Callback {
-
-        private final List<JSONObject> oldList;
-        private final List<JSONObject> newList;
-
-        public ItemDiffCallback(List<JSONObject> oldList, List<JSONObject> newList) {
-            this.oldList = oldList;
-            this.newList = newList;
-        }
-
-        @Override
-        public int getOldListSize() {
-            return oldList.size();
-        }
-
-        @Override
-        public int getNewListSize() {
-            return newList.size();
-        }
-
-        @Override
-        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            // Checks if two items are the same entity (e.g., by comparing their unique IDs)
-            try {
-                return oldList.get(oldItemPosition).getString("id").equals(newList.get(newItemPosition).getString("id"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-
-        @Override
-        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            // Checks if the visual representation of an item has changed
-            return oldList.get(oldItemPosition).toString().equals(newList.get(newItemPosition).toString());
         }
     }
 

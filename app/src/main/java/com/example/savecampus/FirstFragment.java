@@ -43,7 +43,7 @@ public class FirstFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         // --- ADMIN CHECK ---
-        SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireActivity().getSharedPreferences("SaveCampusPrefs", Context.MODE_PRIVATE);
         String currentUserEmail = prefs.getString("logged_in_email", "");
 
         // REPLACE "admin@gmail.com" with the specific email you want to allow

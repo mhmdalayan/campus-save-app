@@ -1,5 +1,7 @@
 package com.example.savecampus.ui.home;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,7 +21,6 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.savecampus.AddItemActivity;
-import com.example.savecampus.CartManager;
 import com.example.savecampus.ItemAdapter;
 import com.example.savecampus.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -50,12 +51,19 @@ public class HomeFragment extends Fragment {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         FloatingActionButton fab = view.findViewById(R.id.fab_add_item);
 
+        // Check if the user is admin to show/hide the Add Item button
+        SharedPreferences prefs = requireActivity().getSharedPreferences("SaveCampusPrefs", Context.MODE_PRIVATE);
+        String currentUserEmail = prefs.getString("logged_in_email", "");
+        if ("admin@gmail.com".equals(currentUserEmail)) {
+            fab.setVisibility(View.VISIBLE);
+        } else {
+            fab.setVisibility(View.GONE);
+        }
+
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // The adapter's click listener defines what happens when "Take It" is pressed
         adapter = new ItemAdapter(requireContext(), item -> {
-            // 1. Add item to the in-memory cart for the dashboard view
-            CartManager.getInstance().addItem(item);
             // 2. Tell the server to delete the item permanently from the database
             deleteItemOnServer(item);
         });
@@ -98,20 +106,23 @@ public class HomeFragment extends Fragment {
      */
     private void deleteItemOnServer(JSONObject item) {
         // Point to the correct PHP script for permanent deletion
-        String url = "http://10.0.2.2/mobileApp/delete_item_permanently.php";
+        String url = "http://10.0.2.2/mobileApp/deletedish.php";
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
-                    // This code runs ONLY if the server successfully deletes the item
-
-                    // Give user feedback
-                    Toast.makeText(getContext(), "Item permanently removed!", Toast.LENGTH_SHORT).show();
-                    Log.d("HomeFragment", "Server Response: " + response);
-
-                    // *** THIS IS THE KEY LINE ***
-                    // Tell the adapter to remove the item from the list on the screen.
-                    // This provides the instant "delete" effect.
-                    adapter.removeItem(item);
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response);
+                        if (jsonResponse.optBoolean("success")) {
+                            Toast.makeText(getContext(), "Item permanently removed!", Toast.LENGTH_SHORT).show();
+                            adapter.removeItem(item);
+                        } else {
+                            String msg = jsonResponse.optString("message", "Unknown error");
+                            Toast.makeText(getContext(), "Failed: " + msg, Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        Log.e("HomeFragment", "JSON Parse Error: " + e.getMessage());
+                        Toast.makeText(getContext(), "Error parsing server response.", Toast.LENGTH_SHORT).show();
+                    }
                 },
                 error -> {
                     // This code runs if the server returns an error

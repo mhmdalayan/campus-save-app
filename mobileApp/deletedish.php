@@ -1,15 +1,28 @@
 <?php
-require_once 'connection.php';
+    header('Content-Type: application/json');
+    require_once 'connection.php';
 
-$email = $_POST['email'];
+    if (!$con) {
+        echo json_encode(["success" => false, "message" => "Database connection failed."]);
+        exit();
+    }
 
-$stmt = mysqli_prepare($con, "DELETE FROM users WHERE email = ?");
-mysqli_stmt_bind_param($stmt, "s", $email);
+    if (!isset($_POST['id'])) {
+        echo json_encode(["success" => false, "message" => "Item ID is missing."]);
+        exit();
+    }
 
-if(mysqli_stmt_execute($stmt)){
-    echo json_encode(array("status" => "success"));
-}
-else {
-    echo json_encode(array("status" => "fail"));
-}
+    $id = $_POST['id'];
+
+    $stmt = mysqli_prepare($con, "DELETE FROM items WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $id);
+
+    if (mysqli_stmt_execute($stmt)) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Failed to delete item."]);
+    }
+
+    mysqli_stmt_close($stmt);
+    mysqli_close($con);
 ?>

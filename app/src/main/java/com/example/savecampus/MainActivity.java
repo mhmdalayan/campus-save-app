@@ -17,9 +17,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // This is correct and necessary to prevent issues with stale cart data.
-        CartManager.getInstance().clearCart();
-
         // 1. Inflate the layout using the generated binding class.
         binding = ActivityMainBinding.inflate(getLayoutInflater());
 
@@ -28,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
         // The AppBarConfiguration defines your top-level navigation destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
+                R.id.navigation_home, R.id.navigation_notifications)
                 .build();
 
         // Find the NavController, which manages fragment transactions within the NavHost.
