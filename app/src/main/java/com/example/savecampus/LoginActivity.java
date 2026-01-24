@@ -26,87 +26,97 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login); // Assuming this is your layout file
+        setContentView(R.layout.activity_login);
 
-        // Assuming these are the IDs in your activity_login.xml
         EditText etEmail = findViewById(R.id.etEmail);
         EditText etPassword = findViewById(R.id.etPassword);
         TextView btnLogin = findViewById(R.id.btnLogin);
-        TextView tvGoToRegister = findViewById(R.id.tvRegister); // Optional: Link to RegisterActivity
+        TextView tvGoToRegister = findViewById(R.id.tvRegister);
 
         btnLogin.setOnClickListener(v -> {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Email and password cannot be empty.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Email and password cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // If validation passes, call the login method
             loginUser(email, password);
         });
 
-        // Optional: Set up a click listener to go back to the registration screen
-        tvGoToRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-            startActivity(intent);
-        });
+        tvGoToRegister.setOnClickListener(v ->
+                startActivity(new Intent(LoginActivity.this, RegisterActivity.class))
+        );
     }
 
-    /**
-     * Sends credentials to the server for authentication.
-     * @param email The user's email.
-     * @param password The user's password.
-     */
     private void loginUser(final String email, final String password) {
-        String url = "http://10.0.2.2/mobileApp/login.php"; // Point to the new login script
+
+        String url = "http://10.0.2.2/mobileApp/login.php";
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+        StringRequest request = new StringRequest(
+                Request.Method.POST,
+                url,
                 response -> {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
-                        boolean success = jsonResponse.getBoolean("success");
+                        JSONObject json = new JSONObject(response);
 
-                        if (success) {
-                            // Login was successful
-                            String username = jsonResponse.getString("username");
-                            Toast.makeText(LoginActivity.this, "Welcome, " + username + "!", Toast.LENGTH_SHORT).show();
+                        if (json.getBoolean("success")) {
 
-                            // Save the email to SharedPreferences to check permissions later
-//                            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-//                            prefs.edit().putString("logged_in_email", email).apply();
-                            SharedPreferences prefs = getSharedPreferences("SaveCampusPrefs", MODE_PRIVATE);
+                            int userId = json.getInt("user_id"); // ✅ IMPORTANT
+                            String name = json.getString("name");
+                            String role = json.getString("role");
+
+                            SharedPreferences prefs =
+                                    getSharedPreferences("SaveCampusPrefs", MODE_PRIVATE);
+
                             SharedPreferences.Editor editor = prefs.edit();
+                            editor.putInt("user_id", userId);     // ✅ FIX
                             editor.putString("logged_in_email", email);
-                            editor.putString("username", username); // <--- ADD THIS LINE
+                            editor.putString("username", name);
+                            editor.putString("role", role);
                             editor.apply();
-                            // Navigate to your main app screen (e.g., MainActivity or HomeActivity)
+
+                            Toast.makeText(
+                                    LoginActivity.this,
+                                    "Welcome, " + name,
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            // Optional: Clear the activity stack so the user can't go back to the login screen
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
-                            finish(); // Close the login activity
+                            finish();
 
                         } else {
-                            // Login failed, show the error message from the server
-                            String message = jsonResponse.getString("message");
-                            Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
+                            Toast.makeText(
+                                    LoginActivity.this,
+                                    json.getString("message"),
+                                    Toast.LENGTH_LONG
+                            ).show();
                         }
+
                     } catch (JSONException e) {
-                        Log.e("LoginActivity", "JSON Parsing error: " + e.getMessage());
-                        Toast.makeText(LoginActivity.this, "Invalid response from server.", Toast.LENGTH_LONG).show();
+                        Log.e("LoginActivity", "JSON error: " + e.getMessage());
+                        Toast.makeText(
+                                LoginActivity.this,
+                                "Invalid server response",
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
                 },
                 error -> {
-                    // Handle network errors
                     Log.e("LoginActivity", "Volley error: " + error.toString());
-                    Toast.makeText(LoginActivity.this, "Login failed. Please check your internet connection.", Toast.LENGTH_LONG).show();
-                }) {
+                    Toast.makeText(
+                            LoginActivity.this,
+                            "Login failed. Check internet connection.",
+                            Toast.LENGTH_LONG
+                    ).show();
+                }
+        ) {
             @Override
             protected Map<String, String> getParams() {
-                // Send email and password as POST parameters
                 Map<String, String> params = new HashMap<>();
                 params.put("email", email);
                 params.put("password", password);
@@ -114,7 +124,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
-        // Add the request to the queue to execute it
-        queue.add(stringRequest);
+        queue.add(request);
     }
 }
