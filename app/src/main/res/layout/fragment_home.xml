@@ -1,37 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.recyclerview.widget.RecyclerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rv_items"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white"
-    tools:context=".ui.home.HomeFragment">
-
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:ignore="MissingClass">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_items"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="80dp" /> <!-- Padding to not hide last item behind FAB -->
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <!-- This button is now green from the theme. app:tint makes the '+' icon white. -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_item"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Add New Item"
-        app:srcCompat="@android:drawable/ic_input_add"
-        app:tint="@color/white" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    android:layout_height="match_parent" />

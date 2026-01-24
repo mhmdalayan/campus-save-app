@@ -3,47 +3,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@id/navigation_home">
 
-    <!-- Fragment 1: Home Screen -->
+    <!-- HOME -->
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.savecampus.FirstFragment"
+        android:name="com.example.savecampus.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home">
+        tools:layout="@layout/fragment_home" />
 
-        <!-- This action allows navigating from FirstFragment to SecondFragment -->
-        <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/secondFragment" />
-    </fragment>
-
-    <!-- Fragment 2: Second Screen -->
-    <fragment
-        android:id="@+id/secondFragment"
-        android:name="com.example.savecampus.SecondFragment"
-        android:label="fragment_second"
-        tools:layout="@layout/fragment_second" />
-
-    <!-- Fragment 3: Dashboard -->
+    <!-- DASHBOARD -->
     <fragment
         android:id="@+id/navigation_dashboard"
         android:name="com.example.savecampus.ui.dashboard.DashboardFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
-    <!-- Fragment 4: Notifications -->
+    <!-- NOTIFICATIONS -->
     <fragment
         android:id="@+id/navigation_notifications"
         android:name="com.example.savecampus.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
 
-    <!-- Fragment 5: Profile -->
+    <!-- PROFILE -->
     <fragment
         android:id="@+id/navigation_profile"
         android:name="com.example.savecampus.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 
-</navigation> <!-- The single, correct closing tag for the entire file -->
+</navigation>

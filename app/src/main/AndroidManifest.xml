@@ -2,9 +2,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Add internet permission if not already present for Volley -->
+    <!-- Internet for Volley -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- Camera permission (for capture photo) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Gallery access (Android 12 and below) -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Gallery access (Android 13+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -15,36 +28,34 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SaveCampus"
-        tools:targetApi="31"
-        android:usesCleartextTraffic="true"> <!-- Add this for http://... traffic on modern Android -->
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
 
-        <!-- MainActivity is now a regular activity -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/title_activity_main"
-            android:theme="@style/Theme.SaveCampus.NoActionBar">
-            <!-- The launcher intent filter has been REMOVED from here -->
-        </activity>
-
-        <!-- LoginActivity is now the LAUNCHER activity -->
+        <!-- LOGIN (LAUNCHER) -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
-            <!-- The launcher intent filter has been MOVED here -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Your RegisterActivity should also have an entry -->
+        <!-- MAIN ACTIVITY -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SaveCampus.NoActionBar" />
+
+        <!-- REGISTER -->
         <activity
             android:name=".RegisterActivity"
             android:exported="false" />
 
+        <!-- ADD MEAL -->
         <activity
-            android:name=".AddItemActivity" />
+            android:name=".AddItemActivity"
+            android:exported="false" />
 
     </application>
 </manifest>

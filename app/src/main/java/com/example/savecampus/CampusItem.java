@@ -1,32 +1,24 @@
 package com.example.savecampus;
 
 public class CampusItem {
-    private final String name;
-    private final String price;
-    private final String description;
-    private final int imageId;
 
-    public CampusItem(String name, String price, String description, int imageId) {
+    public int id;
+    public String name;
+    public int availablePortions;
+    public String expiresAt;
+    public String imagePath;
+
+    public CampusItem(
+            int id,
+            String name,
+            int availablePortions,
+            String expiresAt,
+            String imagePath
+    ) {
+        this.id = id;
         this.name = name;
-        this.price = price;
-        this.description = description;
-        this.imageId = imageId;
-    }
-
-    // --- Getters to access the data ---
-    public String getName() {
-        return name;
-    }
-
-    public String getPrice() {
-        return price;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public int getImageId() {
-        return imageId;
+        this.availablePortions = availablePortions;
+        this.expiresAt = expiresAt;
+        this.imagePath = imagePath;
     }
 }

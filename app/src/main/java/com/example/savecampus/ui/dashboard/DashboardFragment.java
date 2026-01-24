@@ -4,33 +4,28 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.example.savecampus.databinding.FragmentDashboardBinding; // Make sure you create this layout
+
+import com.example.savecampus.R;
 
 public class DashboardFragment extends Fragment {
 
-    private FragmentDashboardBinding binding;
-
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentDashboardBinding.inflate(inflater, container, false);
-        return binding.getRoot();
-    }
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
+        View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+        TextView tv = view.findViewById(R.id.dashboardTextView);
+        tv.setText("Dashboard Fragment");
 
-        // The ID 'dashboardTextview' must exist in your fragment_dashboard.xml
-        binding.dashboardTextview.setText("This is the Dashboard Fragment.");
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
+        return view;
     }
 }
