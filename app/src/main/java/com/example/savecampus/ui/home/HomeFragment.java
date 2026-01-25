@@ -13,11 +13,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.savecampus.ItemAdapter;
 import com.example.savecampus.R;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class HomeFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.rv_items);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new ItemAdapter(getContext());
+        adapter = new ItemAdapter(requireContext());
         recyclerView.setAdapter(adapter);
 
         loadMeals();
@@ -50,19 +51,28 @@ public class HomeFragment extends Fragment {
     private void loadMeals() {
 
         String url = "http://10.0.2.2/mobileApp/get_meals.php";
-
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
-        JsonArrayRequest request = new JsonArrayRequest(
+        JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
-                    List<JSONObject> list = new ArrayList<>();
-                    for (int i = 0; i < response.length(); i++) {
-                        list.add(response.optJSONObject(i));
+                    try {
+                        if (response.getBoolean("success")) {
+
+                            JSONArray mealsArray = response.getJSONArray("meals");
+                            List<JSONObject> list = new ArrayList<>();
+
+                            for (int i = 0; i < mealsArray.length(); i++) {
+                                list.add(mealsArray.getJSONObject(i));
+                            }
+
+                            adapter.setItems(list);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    adapter.setItems(list);
                 },
                 error -> error.printStackTrace()
         );
