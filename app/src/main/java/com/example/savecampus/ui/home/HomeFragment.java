@@ -40,7 +40,7 @@ public class HomeFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.rv_items);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new ItemAdapter(requireContext());
+        adapter = new ItemAdapter(requireContext() , true , true);
         recyclerView.setAdapter(adapter);
 
         loadMeals();
