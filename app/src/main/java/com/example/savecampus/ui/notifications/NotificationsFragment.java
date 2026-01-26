@@ -2,25 +2,30 @@ package com.example.savecampus.ui.notifications;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.savecampus.R;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
-import java.util.Set;
 
 public class NotificationsFragment extends Fragment {
 
@@ -52,33 +57,68 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE);
-        Set<String> notificationSet = prefs.getStringSet("notifications", new HashSet<>());
+        String url = "http://10.0.2.2/mobileApp/get_notifications.php";
+        RequestQueue queue = Volley.newRequestQueue(requireContext());
 
-        List<String> notificationList = new ArrayList<>(notificationSet);
-        Collections.sort(notificationList, Collections.reverseOrder()); // Sorts alphabetically descending, good for timestamps
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    java.util.ArrayList<String> notificationList = new java.util.ArrayList<>();
+                    try {
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject notification = response.getJSONObject(i);
+                            notificationList.add(notification.getString("message"));
+                        }
 
-        if (notificationList.isEmpty()) {
-            emptyView.setVisibility(View.VISIBLE);
-            clearAllButton.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.GONE);
-        } else {
-            emptyView.setVisibility(View.GONE);
-            clearAllButton.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.VISIBLE);
-            adapter = new NotificationAdapter(notificationList);
-            recyclerView.setAdapter(adapter);
-        }
+                        if (notificationList.isEmpty()) {
+                            emptyView.setVisibility(View.VISIBLE);
+                            clearAllButton.setVisibility(View.GONE);
+                            recyclerView.setVisibility(View.GONE);
+                        } else {
+                            emptyView.setVisibility(View.GONE);
+                            clearAllButton.setVisibility(View.VISIBLE);
+                            recyclerView.setVisibility(View.VISIBLE);
+                            adapter = new NotificationAdapter(notificationList);
+                            recyclerView.setAdapter(adapter);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Failed to parse notifications.", Toast.LENGTH_SHORT).show();
+                        emptyView.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                    }
+                },
+                error -> {
+                    error.printStackTrace();
+                    Toast.makeText(getContext(), "Failed to load notifications.", Toast.LENGTH_SHORT).show();
+                    emptyView.setVisibility(View.VISIBLE);
+                    recyclerView.setVisibility(View.GONE);
+                });
+
+        queue.add(request);
     }
 
     private void clearNotifications() {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.remove("notifications");
-        editor.apply();
+        String url = "http://10.0.2.2/mobileApp/clear_notifications.php";
+        RequestQueue queue = Volley.newRequestQueue(requireContext());
 
-        // Refresh the view
-        loadNotifications();
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    try {
+                        JSONObject json = new JSONObject(response);
+                        if (json.getBoolean("success")) {
+                            Toast.makeText(getContext(), "Notifications cleared", Toast.LENGTH_SHORT).show();
+                            loadNotifications();
+                        } else {
+                            Toast.makeText(getContext(), "Failed to clear notifications: " + json.getString("message"), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {
+                        Toast.makeText(getContext(), "Error parsing server response", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> Toast.makeText(getContext(), "Network error while clearing notifications", Toast.LENGTH_SHORT).show()
+        );
+
+        queue.add(request);
     }
 
     // --- Inner Adapter Class ---
@@ -92,7 +132,7 @@ public class NotificationsFragment extends Fragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notification_custom, parent, false);
             return new ViewHolder(view);
         }
 
@@ -110,7 +150,7 @@ public class NotificationsFragment extends Fragment {
             final TextView textView;
             ViewHolder(View view) {
                 super(view);
-                textView = view.findViewById(android.R.id.text1);
+                textView = view.findViewById(R.id.notificationMessage);
             }
         }
     }

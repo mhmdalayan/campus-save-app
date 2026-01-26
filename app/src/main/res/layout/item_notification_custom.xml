@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="12dp"
+    android:padding="16dp"
     android:gravity="center_vertical">
 
     <ImageView
@@ -12,14 +11,13 @@
         android:layout_height="24dp"
         android:src="@drawable/ic_notifications_black_24dp"
         android:layout_marginEnd="16dp"
-        android:alpha="0.7"/>
+        android:contentDescription="Notification Icon" />
 
     <TextView
-        android:id="@+id/notificationTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/notificationMessage"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="You claimed an item at a certain time."
         android:textSize="16sp"
-        android:textColor="@android:color/black"/>
+        android:textColor="#000000" />
 
 </LinearLayout>

@@ -3,33 +3,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".ui.notifications.NotificationsFragment">
-
-    <Button
-        android:id="@+id/clearAllButton"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="8dp"
-        android:text="Clear All"
-        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/notificationsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/clearAllButton"
-        tools:listitem="@layout/notification_item" />
+        android:layout_above="@+id/clearAllButton"
+        android:visibility="gone"
+        tools:listitem="@layout/item_notification_custom" />
 
     <TextView
         android:id="@+id/emptyNotificationsTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="No notifications yet."
-        android:textSize="18sp"
+        android:text="No notifications yet"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/clearAllButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="Clear All"
         android:visibility="gone" />
 
 </RelativeLayout>
