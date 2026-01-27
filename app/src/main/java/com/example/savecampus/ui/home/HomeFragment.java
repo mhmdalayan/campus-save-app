@@ -1,6 +1,8 @@
 package com.example.savecampus.ui.home;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +31,8 @@ public class HomeFragment extends Fragment {
     private ItemAdapter adapter;
     private List<JSONObject> allMeals = new ArrayList<>();
     private List<JSONObject> filteredMeals = new ArrayList<>();
+    private Handler refreshHandler;
+    private Runnable refreshRunnable;
 
     @Nullable
     @Override
@@ -48,6 +52,41 @@ public class HomeFragment extends Fragment {
         loadMeals();
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadMeals();
+        startAutoRefresh();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopAutoRefresh();
+    }
+
+    private void startAutoRefresh() {
+        if (refreshHandler == null) {
+            refreshHandler = new Handler(Looper.getMainLooper());
+        }
+        
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                loadMeals();
+                refreshHandler.postDelayed(this, 30000); // Refresh every 30 seconds
+            }
+        };
+        
+        refreshHandler.postDelayed(refreshRunnable, 30000);
+    }
+
+    private void stopAutoRefresh() {
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+        }
     }
 
     private void loadMeals() {

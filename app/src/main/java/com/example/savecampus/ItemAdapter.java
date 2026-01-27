@@ -63,6 +63,19 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
             // ================= BASIC DATA =================
             holder.tvMealName.setText(item.getString("name"));
+            
+            // Display description if available
+            if (item.has("description") && !item.isNull("description")) {
+                String description = item.getString("description");
+                if (description != null && !description.trim().isEmpty()) {
+                    holder.tvDescription.setVisibility(View.VISIBLE);
+                    holder.tvDescription.setText(description);
+                } else {
+                    holder.tvDescription.setVisibility(View.GONE);
+                }
+            } else {
+                holder.tvDescription.setVisibility(View.GONE);
+            }
 
             if (showPortions) {
                 holder.tvPortions.setVisibility(View.VISIBLE);
@@ -293,13 +306,14 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
     static class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView imgMeal;
-        TextView tvMealName, tvPortions, tvExpiresAt;
+        TextView tvMealName, tvDescription, tvPortions, tvExpiresAt;
         Button btnClaim, btnDelete;
 
         ViewHolder(View itemView) {
             super(itemView);
             imgMeal = itemView.findViewById(R.id.imgMeal);
             tvMealName = itemView.findViewById(R.id.tvMealName);
+            tvDescription = itemView.findViewById(R.id.tvDescription);
             tvPortions = itemView.findViewById(R.id.tvPortions);
             tvExpiresAt = itemView.findViewById(R.id.tvExpiresAt);
             btnClaim = itemView.findViewById(R.id.btnClaim);
