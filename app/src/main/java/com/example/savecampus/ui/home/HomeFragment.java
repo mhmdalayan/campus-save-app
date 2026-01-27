@@ -27,6 +27,8 @@ import java.util.List;
 public class HomeFragment extends Fragment {
 
     private ItemAdapter adapter;
+    private List<JSONObject> allMeals = new ArrayList<>();
+    private List<JSONObject> filteredMeals = new ArrayList<>();
 
     @Nullable
     @Override
@@ -62,13 +64,15 @@ public class HomeFragment extends Fragment {
                         if (response.getBoolean("success")) {
 
                             JSONArray mealsArray = response.getJSONArray("meals");
-                            List<JSONObject> list = new ArrayList<>();
+                            allMeals.clear();
 
                             for (int i = 0; i < mealsArray.length(); i++) {
-                                list.add(mealsArray.getJSONObject(i));
+                                allMeals.add(mealsArray.getJSONObject(i));
                             }
 
-                            adapter.setItems(list);
+                            filteredMeals.clear();
+                            filteredMeals.addAll(allMeals);
+                            adapter.setItems(filteredMeals);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -78,5 +82,30 @@ public class HomeFragment extends Fragment {
         );
 
         queue.add(request);
+    }
+
+    public void filterMeals(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            filteredMeals.clear();
+            filteredMeals.addAll(allMeals);
+        } else {
+            filteredMeals.clear();
+            String lowerQuery = query.toLowerCase();
+            
+            for (JSONObject meal : allMeals) {
+                try {
+                    String mealName = meal.getString("name").toLowerCase();
+                    if (mealName.contains(lowerQuery)) {
+                        filteredMeals.add(meal);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        if (adapter != null) {
+            adapter.setItems(filteredMeals);
+        }
     }
 }
