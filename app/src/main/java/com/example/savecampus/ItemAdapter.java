@@ -8,8 +8,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -108,18 +110,25 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             }
 
             // ================= ROLE LOGIC (FIXED) =================
-            if ("student".equalsIgnoreCase(userRole) && showClaimButton) {
-                holder.btnClaim.setVisibility(View.VISIBLE);
+            if ("student".equalsIgnoreCase(userRole)) {
+                if (showClaimButton) {
+                    holder.btnClaim.setVisibility(View.VISIBLE);
+                    holder.btnDelete.setVisibility(View.GONE);
+                } else {
+                    // Dashboard - hide both buttons for students
+                    holder.btnClaim.setVisibility(View.GONE);
+                    holder.btnDelete.setVisibility(View.GONE);
+                }
             } else {
+                // Staff - show delete button
+                holder.btnClaim.setVisibility(View.GONE);
                 holder.btnDelete.setVisibility(View.VISIBLE);
             }
 
             // ================= ACTIONS =================
             holder.btnClaim.setOnClickListener(v -> claimMeal(item, holder));
 
-            holder.btnDelete.setOnClickListener(v -> {
-                // TODO: call delete_meal.php
-            });
+            holder.btnDelete.setOnClickListener(v -> showDeleteConfirmation(item, holder));
 
         } catch (Exception e) {
             holder.tvExpiresAt.setText("Unknown expiry");
@@ -186,6 +195,64 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             queue.add(request);
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showDeleteConfirmation(JSONObject item, ViewHolder holder) {
+        new AlertDialog.Builder(context)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Confirm Delete")
+                .setMessage("Are you sure you want to delete this meal?")
+                .setPositiveButton("Yes", (dialog, which) -> deleteMeal(item, holder))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void deleteMeal(JSONObject item, ViewHolder holder) {
+        try {
+            int mealId = item.getInt("id");
+            String url = "http://10.0.2.2/mobileApp/deletedish.php";
+
+            JSONObject body = new JSONObject();
+            body.put("meal_id", mealId);
+
+            com.android.volley.toolbox.JsonObjectRequest request =
+                    new com.android.volley.toolbox.JsonObjectRequest(
+                            com.android.volley.Request.Method.POST,
+                            url,
+                            body,
+                            response -> {
+                                try {
+                                    if (response.getBoolean("success")) {
+                                        // Remove item from list
+                                        int position = holder.getAdapterPosition();
+                                        if (position != RecyclerView.NO_POSITION) {
+                                            items.remove(position);
+                                            notifyItemRemoved(position);
+                                            Toast.makeText(context, "Meal deleted successfully", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        String message = response.optString("message", "Failed to delete meal");
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Toast.makeText(context, "Error processing response", Toast.LENGTH_SHORT).show();
+                                    e.printStackTrace();
+                                }
+                            },
+                            error -> {
+                                Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+                                error.printStackTrace();
+                            }
+                    );
+
+            com.android.volley.RequestQueue queue =
+                    com.android.volley.toolbox.Volley.newRequestQueue(context);
+            queue.add(request);
+
+        } catch (Exception e) {
+            Toast.makeText(context, "Error deleting meal", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
