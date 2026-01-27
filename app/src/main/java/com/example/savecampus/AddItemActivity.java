@@ -41,6 +41,7 @@ public class AddItemActivity extends AppCompatActivity {
     private static final int CAMERA_PERMISSION_REQUEST = 2001;
 
     EditText etMealName, etAvailablePortions, etExpiresAt, etDescription;
+    EditText etPrice, etDiscount;
     Button btnSaveMeal, btnPickImage, btnCaptureImage;
     ImageView imgMeal;
 
@@ -55,11 +56,12 @@ public class AddItemActivity extends AppCompatActivity {
         etAvailablePortions = findViewById(R.id.etAvailablePortions);
         etExpiresAt = findViewById(R.id.etExpiresAt);
         etDescription = findViewById(R.id.etDescription);
+        etPrice = findViewById(R.id.etPrice);
+        etDiscount = findViewById(R.id.etDiscount);
 
         btnSaveMeal = findViewById(R.id.btnSaveMeal);
         btnPickImage = findViewById(R.id.btnPickImage);
         btnCaptureImage = findViewById(R.id.btnCaptureImage);
-
         imgMeal = findViewById(R.id.imgMeal);
 
         etExpiresAt.setOnClickListener(v -> showDateTimePicker());
@@ -68,42 +70,16 @@ public class AddItemActivity extends AppCompatActivity {
         btnSaveMeal.setOnClickListener(v -> saveMeal());
     }
 
-    /* ---------------- CAMERA PERMISSION ---------------- */
-
     private void checkCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             openCamera();
         } else {
-            ActivityCompat.requestPermissions(
-                    this,
+            ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.CAMERA},
-                    CAMERA_PERMISSION_REQUEST
-            );
+                    CAMERA_PERMISSION_REQUEST);
         }
     }
-
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode,
-            String[] permissions,
-            int[] grantResults
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == CAMERA_PERMISSION_REQUEST) {
-            if (grantResults.length > 0 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openCamera();
-            } else {
-                Toast.makeText(this,
-                        "Camera permission denied",
-                        Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    /* ---------------- IMAGE PICK ---------------- */
 
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
@@ -127,7 +103,6 @@ public class AddItemActivity extends AppCompatActivity {
                 Uri imageUri = data.getData();
                 imgMeal.setImageURI(imageUri);
                 imageBase64 = convertUriToBase64(imageUri);
-
             } else if (requestCode == CAMERA_REQUEST) {
                 Bitmap bitmap = (Bitmap) data.getExtras().get("data");
                 imgMeal.setImageBitmap(bitmap);
@@ -138,33 +113,22 @@ public class AddItemActivity extends AppCompatActivity {
         }
     }
 
-    /* ---------------- DATE & TIME ---------------- */
-
     private void showDateTimePicker() {
         Calendar c = Calendar.getInstance();
 
-        new DatePickerDialog(
-                this,
-                (v, y, m, d) -> new TimePickerDialog(
-                        this,
-                        (tv, h, min) -> etExpiresAt.setText(
-                                String.format(
-                                        Locale.US,
-                                        "%04d-%02d-%02d %02d:%02d:00",
-                                        y, m + 1, d, h, min
-                                )
-                        ),
+        new DatePickerDialog(this, (v, y, m, d) ->
+                new TimePickerDialog(this, (tv, h, min) ->
+                        etExpiresAt.setText(String.format(
+                                Locale.US,
+                                "%04d-%02d-%02d %02d:%02d:00",
+                                y, m + 1, d, h, min)),
                         c.get(Calendar.HOUR_OF_DAY),
                         c.get(Calendar.MINUTE),
-                        true
-                ).show(),
+                        true).show(),
                 c.get(Calendar.YEAR),
                 c.get(Calendar.MONTH),
-                c.get(Calendar.DAY_OF_MONTH)
-        ).show();
+                c.get(Calendar.DAY_OF_MONTH)).show();
     }
-
-    /* ---------------- SAVE MEAL ---------------- */
 
     private void saveMeal() {
 
@@ -172,11 +136,22 @@ public class AddItemActivity extends AppCompatActivity {
         String portions = etAvailablePortions.getText().toString().trim();
         String expiresAt = etExpiresAt.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
+        String price = etPrice.getText().toString().trim();
+        String discount = etDiscount.getText().toString().trim();
 
-        if (name.isEmpty() || portions.isEmpty()
-                || expiresAt.isEmpty() || imageBase64 == null) {
+        if (name.isEmpty() || portions.isEmpty() || expiresAt.isEmpty()
+                || imageBase64 == null || price.isEmpty() || discount.isEmpty()) {
+
             Toast.makeText(this,
-                    "Fill all fields and add image",
+                    "Fill all fields including price and discount",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int discountValue = Integer.parseInt(discount);
+        if (discountValue < 0 || discountValue > 100) {
+            Toast.makeText(this,
+                    "Discount must be between 0 and 100",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -186,18 +161,14 @@ public class AddItemActivity extends AppCompatActivity {
 
         int userId = prefs.getInt("user_id", -1);
         if (userId == -1) {
-            Toast.makeText(this,
-                    "Session expired",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Session expired", Toast.LENGTH_LONG).show();
             return;
         }
 
         String url = "http://10.0.2.2/mobileApp/adddish.php";
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        StringRequest request = new StringRequest(
-                Request.Method.POST,
-                url,
+        StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
                     try {
                         JSONObject json = new JSONObject(response);
@@ -219,8 +190,8 @@ public class AddItemActivity extends AppCompatActivity {
                 },
                 error -> Toast.makeText(this,
                         "Network error",
-                        Toast.LENGTH_LONG).show()
-        ) {
+                        Toast.LENGTH_LONG).show()) {
+
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> p = new HashMap<>();
@@ -229,6 +200,8 @@ public class AddItemActivity extends AppCompatActivity {
                 p.put("description", description);
                 p.put("available_portions", portions);
                 p.put("expires_at", expiresAt);
+                p.put("price", price);
+                p.put("discount_percent", discount);
                 p.put("image_base64", imageBase64);
                 return p;
             }
@@ -236,8 +209,6 @@ public class AddItemActivity extends AppCompatActivity {
 
         queue.add(request);
     }
-
-    /* ---------------- BASE64 HELPERS ---------------- */
 
     private String convertUriToBase64(Uri uri) throws Exception {
         InputStream in = getContentResolver().openInputStream(uri);

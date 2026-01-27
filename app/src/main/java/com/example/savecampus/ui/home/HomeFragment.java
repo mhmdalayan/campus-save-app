@@ -1,5 +1,6 @@
 package com.example.savecampus.ui.home;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.savecampus.ItemAdapter;
 import com.example.savecampus.R;
@@ -29,8 +30,9 @@ import java.util.List;
 public class HomeFragment extends Fragment {
 
     private ItemAdapter adapter;
-    private List<JSONObject> allMeals = new ArrayList<>();
-    private List<JSONObject> filteredMeals = new ArrayList<>();
+    private final List<JSONObject> allMeals = new ArrayList<>();
+    private final List<JSONObject> filteredMeals = new ArrayList<>();
+
     private Handler refreshHandler;
     private Runnable refreshRunnable;
 
@@ -46,10 +48,10 @@ public class HomeFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.rv_items);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new ItemAdapter(requireContext() , true , true);
+        adapter = new ItemAdapter(requireContext(), true, true);
         recyclerView.setAdapter(adapter);
 
-        loadMeals();
+        loadMeals(); // load once
 
         return view;
     }
@@ -57,7 +59,6 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        loadMeals();
         startAutoRefresh();
     }
 
@@ -71,15 +72,12 @@ public class HomeFragment extends Fragment {
         if (refreshHandler == null) {
             refreshHandler = new Handler(Looper.getMainLooper());
         }
-        
-        refreshRunnable = new Runnable() {
-            @Override
-            public void run() {
-                loadMeals();
-                refreshHandler.postDelayed(this, 30000); // Refresh every 30 seconds
-            }
+
+        refreshRunnable = () -> {
+            loadMeals();
+            refreshHandler.postDelayed(refreshRunnable, 30000);
         };
-        
+
         refreshHandler.postDelayed(refreshRunnable, 30000);
     }
 
@@ -91,28 +89,40 @@ public class HomeFragment extends Fragment {
 
     private void loadMeals() {
 
-        String url = "http://10.0.2.2/mobileApp/get_meals.php";
-        RequestQueue queue = Volley.newRequestQueue(requireContext());
+        Context ctx = getContext();
+        if (ctx == null) return; // 🔒 avoid crash
 
-        JsonObjectRequest request = new JsonObjectRequest(
+        String url = "http://10.0.2.2/mobileApp/get_meals.php";
+        RequestQueue queue = Volley.newRequestQueue(ctx);
+
+        StringRequest request = new StringRequest(
                 Request.Method.GET,
                 url,
-                null,
                 response -> {
                     try {
-                        if (response.getBoolean("success")) {
+                        JSONArray mealsArray;
 
-                            JSONArray mealsArray = response.getJSONArray("meals");
-                            allMeals.clear();
-
-                            for (int i = 0; i < mealsArray.length(); i++) {
-                                allMeals.add(mealsArray.getJSONObject(i));
-                            }
-
-                            filteredMeals.clear();
-                            filteredMeals.addAll(allMeals);
-                            adapter.setItems(filteredMeals);
+                        String trimmed = response.trim();
+                        if (trimmed.startsWith("[")) {
+                            // old API format
+                            mealsArray = new JSONArray(trimmed);
+                        } else {
+                            // new API format
+                            JSONObject obj = new JSONObject(trimmed);
+                            if (!obj.optBoolean("success")) return;
+                            mealsArray = obj.optJSONArray("meals");
+                            if (mealsArray == null) mealsArray = new JSONArray();
                         }
+
+                        allMeals.clear();
+                        for (int i = 0; i < mealsArray.length(); i++) {
+                            allMeals.add(mealsArray.getJSONObject(i));
+                        }
+
+                        filteredMeals.clear();
+                        filteredMeals.addAll(allMeals);
+                        adapter.setItems(filteredMeals);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -124,27 +134,23 @@ public class HomeFragment extends Fragment {
     }
 
     public void filterMeals(String query) {
+        filteredMeals.clear();
+
         if (query == null || query.trim().isEmpty()) {
-            filteredMeals.clear();
             filteredMeals.addAll(allMeals);
         } else {
-            filteredMeals.clear();
-            String lowerQuery = query.toLowerCase();
-            
+            String lower = query.toLowerCase();
             for (JSONObject meal : allMeals) {
                 try {
-                    String mealName = meal.getString("name").toLowerCase();
-                    if (mealName.contains(lowerQuery)) {
+                    if (meal.optString("name", "")
+                            .toLowerCase()
+                            .contains(lower)) {
                         filteredMeals.add(meal);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                } catch (Exception ignored) {}
             }
         }
-        
-        if (adapter != null) {
-            adapter.setItems(filteredMeals);
-        }
+
+        adapter.setItems(filteredMeals);
     }
 }

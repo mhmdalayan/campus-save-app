@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,25 +14,22 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.savecampus.ItemAdapter;
 import com.example.savecampus.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DashboardFragment extends Fragment {
 
-    RecyclerView recyclerView;
-    ItemAdapter adapter;
-
-
+    private RecyclerView recyclerView;
+    private ItemAdapter adapter;
 
     @Nullable
     @Override
@@ -41,74 +38,72 @@ public class DashboardFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
     ) {
-        View view =
-                inflater.inflate(R.layout.fragment_dashboard, container, false);
+        View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new ItemAdapter(getContext(), false , false); // hide Claim button
+        // Dashboard: no Claim button, no Portions badge
+        adapter = new ItemAdapter(requireContext(), false, false);
         recyclerView.setAdapter(adapter);
-
 
         loadClaimedMeals();
 
         return view;
     }
 
+    // ================= LOAD CLAIMED MEALS =================
+
     private void loadClaimedMeals() {
 
+        Context ctx = getContext();
+        if (ctx == null) return;
+
         SharedPreferences prefs =
-                requireContext().getSharedPreferences(
-                        "SaveCampusPrefs", Context.MODE_PRIVATE);
+                ctx.getSharedPreferences("SaveCampusPrefs", Context.MODE_PRIVATE);
 
         int userId = prefs.getInt("user_id", -1);
-        if (userId == -1) return;
+        if (userId == -1) {
+            Toast.makeText(ctx, "Session expired", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        new Thread(() -> {
-            try {
-                URL url = new URL(
-                        "http://10.0.2.2/mobileApp/get_claimed_meals.php?user_id=" + userId
-                );
+        String url =
+                "http://10.0.2.2/mobileApp/get_claimed_meals.php?user_id=" + userId;
 
-                HttpURLConnection conn =
-                        (HttpURLConnection) url.openConnection();
+        StringRequest request = new StringRequest(
+                Request.Method.GET,
+                url,
+                response -> {
+                    try {
+                        JSONObject obj = new JSONObject(response);
+                        if (!obj.optBoolean("success")) return;
 
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
+                        JSONArray arr = obj.optJSONArray("meals");
+                        if (arr == null) arr = new JSONArray();
 
-                BufferedReader reader =
-                        new BufferedReader(
-                                new InputStreamReader(conn.getInputStream())
-                        );
+                        List<JSONObject> items = new ArrayList<>();
+                        for (int i = 0; i < arr.length(); i++) {
+                            items.add(arr.getJSONObject(i));
+                        }
 
-                StringBuilder json = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    json.append(line);
+                        adapter.setItems(items);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(ctx,
+                                "Parse error",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    error.printStackTrace();
+                    Toast.makeText(ctx,
+                            "Network error",
+                            Toast.LENGTH_SHORT).show();
                 }
+        );
 
-                reader.close();
-                conn.disconnect();
-
-                JSONObject response = new JSONObject(json.toString());
-
-                if (!response.getBoolean("success")) return;
-
-                JSONArray arr = response.getJSONArray("meals");
-                List<JSONObject> items = new ArrayList<>();
-
-                for (int i = 0; i < arr.length(); i++) {
-                    items.add(arr.getJSONObject(i));
-                }
-
-                requireActivity().runOnUiThread(() ->
-                        adapter.setItems(items)
-                );
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+        Volley.newRequestQueue(ctx).add(request);
     }
 }

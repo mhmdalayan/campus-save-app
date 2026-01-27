@@ -61,7 +61,7 @@
                 android:orientation="horizontal"
                 android:layout_marginTop="6dp">
 
-                <!-- Portions Badge -->
+                <!-- Portions -->
                 <TextView
                     android:id="@+id/tvPortions"
                     android:layout_width="wrap_content"
@@ -73,7 +73,7 @@
                     android:paddingVertical="4dp"
                     android:background="#4CAF50" />
 
-                <!-- Expiry Badge -->
+                <!-- Expiry -->
                 <TextView
                     android:id="@+id/tvExpiresAt"
                     android:layout_width="wrap_content"
@@ -88,6 +88,56 @@
 
             </LinearLayout>
 
+            <!-- ✅ CLAIMED AT (Dashboard only) -->
+            <TextView
+                android:id="@+id/tvClaimedAt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Claimed at Jan 26, 22:08"
+                android:textSize="12sp"
+                android:textColor="@android:color/white"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_marginTop="6dp"
+                android:background="#2196F3"
+                android:visibility="gone" />
+
+            <!-- Price & Discount Row -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+                <!-- Final Price -->
+                <TextView
+                    android:id="@+id/tvPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$3.00"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:background="#2196F3" />
+
+                <!-- Discount Badge -->
+                <TextView
+                    android:id="@+id/tvDiscount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="70% OFF"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/white"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:layout_marginStart="8dp"
+                    android:background="#E91E63"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
             <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -95,7 +145,7 @@
                 android:orientation="horizontal"
                 android:layout_marginTop="10dp">
 
-                <!-- CLAIM (student) -->
+                <!-- CLAIM -->
                 <Button
                     android:id="@+id/btnClaim"
                     android:layout_width="wrap_content"
@@ -103,7 +153,7 @@
                     android:text="Claim"
                     android:visibility="gone" />
 
-                <!-- DELETE (admin) -->
+                <!-- DELETE -->
                 <Button
                     android:id="@+id/btnDelete"
                     android:layout_width="wrap_content"

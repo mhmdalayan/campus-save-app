@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -55,119 +54,163 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         JSONObject item = items.get(position);
 
         try {
-            // ================= RESET (IMPORTANT) =================
+            // ================= RESET =================
             holder.btnClaim.setVisibility(View.GONE);
             holder.btnDelete.setVisibility(View.GONE);
-            holder.btnClaim.setEnabled(true);
-            holder.btnClaim.setAlpha(1f);
+            holder.tvDiscount.setVisibility(View.GONE);
+            holder.tvClaimedAt.setVisibility(View.GONE);
 
-            // ================= BASIC DATA =================
-            holder.tvMealName.setText(item.getString("name"));
-            
-            // Display description if available
-            if (item.has("description") && !item.isNull("description")) {
-                String description = item.getString("description");
-                if (description != null && !description.trim().isEmpty()) {
-                    holder.tvDescription.setVisibility(View.VISIBLE);
-                    holder.tvDescription.setText(description);
-                } else {
-                    holder.tvDescription.setVisibility(View.GONE);
-                }
+            holder.tvExpiresAt.setVisibility(View.VISIBLE);
+            holder.tvPrice.setVisibility(View.VISIBLE);
+
+            // ================= BASIC =================
+            holder.tvMealName.setText(item.optString("name", ""));
+
+            String desc = item.optString("description", "");
+            if (!desc.trim().isEmpty()) {
+                holder.tvDescription.setVisibility(View.VISIBLE);
+                holder.tvDescription.setText(desc);
             } else {
                 holder.tvDescription.setVisibility(View.GONE);
             }
 
+            // ================= PORTIONS =================
             if (showPortions) {
+                holder.tvPortions.setText(
+                        item.optInt("available_portions", 0) + " left"
+                );
                 holder.tvPortions.setVisibility(View.VISIBLE);
-                holder.tvPortions.setText(item.getInt("available_portions") + " left");
             } else {
                 holder.tvPortions.setVisibility(View.GONE);
             }
 
             Glide.with(context)
-                    .load(item.getString("image_path"))
+                    .load(item.optString("image_path", ""))
                     .placeholder(R.drawable.placeholder_meal)
                     .error(R.drawable.placeholder_error)
                     .into(holder.imgMeal);
 
-            // ================= CLAIMED AT OR EXPIRY LOGIC =================
-            // Check if this is a claimed meal (has claimed_at field)
-            if (item.has("claimed_at") && !item.isNull("claimed_at")) {
-                // Show claimed timestamp
-                String claimedAt = item.getString("claimed_at");
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-                SimpleDateFormat displayFormat = new SimpleDateFormat("MMM dd, HH:mm", Locale.US);
-                
+            // ================= DASHBOARD MODE =================
+            boolean isDashboard = !showClaimButton && !showPortions;
+
+            if (isDashboard && item.has("claimed_at")) {
+
+                holder.tvExpiresAt.setVisibility(View.GONE);
+                holder.tvPrice.setVisibility(View.GONE);
+                holder.tvDiscount.setVisibility(View.GONE);
+
+                holder.tvClaimedAt.setVisibility(View.VISIBLE);
+
+                String claimedRaw = item.optString("claimed_at", "");
                 try {
-                    Date claimedDate = sdf.parse(claimedAt);
-                    holder.tvExpiresAt.setText("Claimed: " + displayFormat.format(claimedDate));
-                    holder.tvExpiresAt.setBackgroundColor(0xFF4CAF50); // Green background
-                } catch (Exception e) {
-                    holder.tvExpiresAt.setText("Claimed");
-                }
-            } else {
-                // Regular expiry logic for available meals
-                String expiresRaw = item.getString("expires_at");
-                SimpleDateFormat sdf =
-                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-                Date expiresDate = sdf.parse(expiresRaw);
+                    SimpleDateFormat in =
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                    SimpleDateFormat out =
+                            new SimpleDateFormat("MMM dd, HH:mm", Locale.US);
 
-                long diff = expiresDate.getTime() - System.currentTimeMillis();
+                    Date d = in.parse(claimedRaw);
+                    Date now = new Date();
 
-                if (diff <= 0) {
-                    // Item expired - remove it from the list immediately
-                    int pos = holder.getAdapterPosition();
-                    if (pos != RecyclerView.NO_POSITION) {
-                        items.remove(pos);
-                        notifyItemRemoved(pos);
-                    }
-                    return; // Exit early since item is removed
-                } else {
-                    long minutes = diff / (1000 * 60);
-                    long hours = minutes / 60;
-                    long days = hours / 24;
+// Check if same day
+                    SimpleDateFormat dayFormat =
+                            new SimpleDateFormat("yyyyMMdd", Locale.US);
 
-                    if (hours < 24) {
-                        holder.tvExpiresAt.setText(
-                                "Expires in " + hours + "h " + (minutes % 60) + "m"
+                    if (dayFormat.format(d).equals(dayFormat.format(now))) {
+
+                        long diffMs = now.getTime() - d.getTime();
+                        long diffMin = diffMs / (1000 * 60);
+                        long diffHour = diffMin / 60;
+
+                        holder.tvClaimedAt.setText(
+                                "Claimed " + diffHour + "h " + (diffMin % 60) + "m ago"
                         );
-                    } else if (days == 1) {
+
+                    } else {
+                        SimpleDateFormat outFmt =
+                                new SimpleDateFormat("MMM dd, HH:mm", Locale.US);
+
+                        holder.tvClaimedAt.setText(
+                                "Claimed at " + outFmt.format(d)
+                        );
+                    }
+
+                } catch (Exception e) {
+                    holder.tvClaimedAt.setText("Claimed");
+                }
+
+            } else {
+
+                // ================= PRICE / DISCOUNT =================
+                double price = item.optDouble("price", 0);
+                int discount = item.optInt("discount_percent", 0);
+
+                holder.tvPrice.setText(String.format(Locale.US, "$%.2f", price));
+
+                if (discount > 0) {
+                    holder.tvDiscount.setVisibility(View.VISIBLE);
+                    holder.tvDiscount.setText(discount + "% OFF");
+                }
+
+                // ================= EXPIRY LOGIC =================
+                if (item.has("expires_at") && !item.isNull("expires_at")) {
+
+                    String expiresRaw = item.optString("expires_at", "");
+                    SimpleDateFormat sdf =
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+
+                    Date expiresDate = sdf.parse(expiresRaw);
+                    Date now = new Date();
+
+                    if (expiresDate.before(now)) {
+                        int pos = holder.getAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            items.remove(pos);
+                            notifyItemRemoved(pos);
+                        }
+                        return;
+                    }
+
+                    long diffMs = expiresDate.getTime() - now.getTime();
+                    long diffMin = diffMs / (1000 * 60);
+                    long diffHour = diffMin / 60;
+                    long diffDay = diffHour / 24;
+
+                    if (diffDay == 0) {
+                        holder.tvExpiresAt.setText(
+                                "Expires in " + diffHour + "h " + (diffMin % 60) + "m"
+                        );
+                    } else if (diffDay == 1) {
                         holder.tvExpiresAt.setText("Expires tomorrow");
                     } else {
-                        holder.tvExpiresAt.setText("Expires " + expiresRaw);
+                        SimpleDateFormat out =
+                                new SimpleDateFormat("MMM dd, HH:mm", Locale.US);
+                        holder.tvExpiresAt.setText(
+                                "Expires " + out.format(expiresDate)
+                        );
                     }
+
+                } else {
+                    holder.tvExpiresAt.setText("No expiry");
                 }
             }
 
-            // ================= ROLE LOGIC (FIXED) =================
+            // ================= ROLE =================
             if ("student".equalsIgnoreCase(userRole)) {
-                if (showClaimButton) {
-                    holder.btnClaim.setVisibility(View.VISIBLE);
-                    holder.btnDelete.setVisibility(View.GONE);
-                } else {
-                    // Dashboard - hide both buttons for students
-                    holder.btnClaim.setVisibility(View.GONE);
-                    holder.btnDelete.setVisibility(View.GONE);
-                }
+                if (showClaimButton) holder.btnClaim.setVisibility(View.VISIBLE);
             } else {
-                // Staff - show delete button
-                holder.btnClaim.setVisibility(View.GONE);
                 holder.btnDelete.setVisibility(View.VISIBLE);
             }
 
-            // ================= ACTIONS =================
             holder.btnClaim.setOnClickListener(v -> claimMeal(item, holder));
-
-            holder.btnDelete.setOnClickListener(v -> showDeleteConfirmation(item, holder));
+            holder.btnDelete.setOnClickListener(v -> showDelete(item, holder));
 
         } catch (Exception e) {
-            holder.tvExpiresAt.setText("Unknown expiry");
-            holder.btnClaim.setEnabled(false);
-            holder.btnClaim.setAlpha(0.4f);
             e.printStackTrace();
+            holder.tvExpiresAt.setText("Error");
         }
     }
 
+    // ================= CLAIM MEAL (FIXED JSONException) =================
     private void claimMeal(JSONObject item, ViewHolder holder) {
         try {
             int mealId = item.getInt("id");
@@ -183,60 +226,44 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             body.put("meal_id", mealId);
             body.put("user_id", userId);
 
-            com.android.volley.toolbox.JsonObjectRequest request =
-                    new com.android.volley.toolbox.JsonObjectRequest(
+            com.android.volley.toolbox.Volley
+                    .newRequestQueue(context)
+                    .add(new com.android.volley.toolbox.JsonObjectRequest(
                             com.android.volley.Request.Method.POST,
                             url,
                             body,
-                            // Inside ItemAdapter.java -> claimMeal method
-                            response -> {
-                                try {
-                                    if (response.getBoolean("success")) {
-                                        // 1. Update the UI locally
-                                        int current = item.getInt("available_portions");
-                                        int newPortions = current - 1;
-                                        
-                                        // 2. TRIGGER NOTIFICATION
-                                        String mealName = item.getString("name");
-                                        sendNotificationToServer("You claimed: " + mealName);
-                                        
-                                        // 3. If portions reach zero, remove item from list
-                                        if (newPortions <= 0) {
-                                            int position = holder.getAdapterPosition();
-                                            if (position != RecyclerView.NO_POSITION) {
-                                                items.remove(position);
-                                                notifyItemRemoved(position);
-                                            }
-                                        } else {
-                                            // Otherwise, just update the portions
-                                            item.put("available_portions", newPortions);
-                                            notifyItemChanged(holder.getAdapterPosition());
-                                        }
+                            res -> {
+                                int current = item.optInt("available_portions", 0);
+                                int newVal = current - 1;
+
+                                if (newVal <= 0) {
+                                    int pos = holder.getAdapterPosition();
+                                    if (pos != RecyclerView.NO_POSITION) {
+                                        items.remove(pos);
+                                        notifyItemRemoved(pos);
                                     }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+                                } else {
+                                    try {
+                                        item.put("available_portions", newVal);
+                                    } catch (Exception ignored) {}
+                                    notifyItemChanged(holder.getAdapterPosition());
                                 }
                             },
-                            error -> error.printStackTrace()
-                    );
+                            err -> {}
+                    ));
 
-            com.android.volley.RequestQueue queue =
-                    com.android.volley.toolbox.Volley.newRequestQueue(context);
-            queue.add(request);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
     }
 
-    private void showDeleteConfirmation(JSONObject item, ViewHolder holder) {
+    private void showDelete(JSONObject item, ViewHolder holder) {
         new AlertDialog.Builder(context)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Confirm Delete")
-                .setMessage("Are you sure you want to delete this meal?")
-                .setPositiveButton("Yes", (dialog, which) -> deleteMeal(item, holder))
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .setIcon(android.R.drawable.ic_dialog_alert) // 👈 this was missing
+                .setTitle("Delete meal")
+                .setMessage("Are you sure?")
+                .setPositiveButton("Yes", (d, w) -> deleteMeal(item, holder))
+                .setNegativeButton("Cancel", null)
                 .show();
+
     }
 
     private void deleteMeal(JSONObject item, ViewHolder holder) {
@@ -247,66 +274,23 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             JSONObject body = new JSONObject();
             body.put("meal_id", mealId);
 
-            com.android.volley.toolbox.JsonObjectRequest request =
-                    new com.android.volley.toolbox.JsonObjectRequest(
+            com.android.volley.toolbox.Volley
+                    .newRequestQueue(context)
+                    .add(new com.android.volley.toolbox.JsonObjectRequest(
                             com.android.volley.Request.Method.POST,
                             url,
                             body,
-                            response -> {
-                                try {
-                                    if (response.getBoolean("success")) {
-                                        // Remove item from list
-                                        int position = holder.getAdapterPosition();
-                                        if (position != RecyclerView.NO_POSITION) {
-                                            items.remove(position);
-                                            notifyItemRemoved(position);
-                                            Toast.makeText(context, "Meal deleted successfully", Toast.LENGTH_SHORT).show();
-                                        }
-                                    } else {
-                                        String message = response.optString("message", "Failed to delete meal");
-                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                                    }
-                                } catch (Exception e) {
-                                    Toast.makeText(context, "Error processing response", Toast.LENGTH_SHORT).show();
-                                    e.printStackTrace();
+                            r -> {
+                                int pos = holder.getAdapterPosition();
+                                if (pos != RecyclerView.NO_POSITION) {
+                                    items.remove(pos);
+                                    notifyItemRemoved(pos);
                                 }
                             },
-                            error -> {
-                                Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
-                                error.printStackTrace();
-                            }
-                    );
+                            e -> {}
+                    ));
 
-            com.android.volley.RequestQueue queue =
-                    com.android.volley.toolbox.Volley.newRequestQueue(context);
-            queue.add(request);
-
-        } catch (Exception e) {
-            Toast.makeText(context, "Error deleting meal", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
-    }
-
-    private void sendNotificationToServer(String message) {
-        String url = "http://10.0.2.2/mobileApp/add_notification.php";
-
-        try {
-            JSONObject body = new JSONObject();
-            body.put("message", message);
-
-            com.android.volley.toolbox.JsonObjectRequest request =
-                    new com.android.volley.toolbox.JsonObjectRequest(
-                            com.android.volley.Request.Method.POST,
-                            url,
-                            body,
-                            response -> android.util.Log.d("Notif", "Saved"),
-                            error -> error.printStackTrace()
-                    );
-
-            com.android.volley.toolbox.Volley.newRequestQueue(context).add(request);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -314,27 +298,32 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         return items.size();
     }
 
-    public void setItems(List<JSONObject> newItems) {
+    public void setItems(List<JSONObject> list) {
         items.clear();
-        items.addAll(newItems);
+        items.addAll(list);
         notifyDataSetChanged();
     }
 
+    // ================= VIEW HOLDER =================
     static class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView imgMeal;
         TextView tvMealName, tvDescription, tvPortions, tvExpiresAt;
+        TextView tvPrice, tvDiscount, tvClaimedAt;
         Button btnClaim, btnDelete;
 
-        ViewHolder(View itemView) {
-            super(itemView);
-            imgMeal = itemView.findViewById(R.id.imgMeal);
-            tvMealName = itemView.findViewById(R.id.tvMealName);
-            tvDescription = itemView.findViewById(R.id.tvDescription);
-            tvPortions = itemView.findViewById(R.id.tvPortions);
-            tvExpiresAt = itemView.findViewById(R.id.tvExpiresAt);
-            btnClaim = itemView.findViewById(R.id.btnClaim);
-            btnDelete = itemView.findViewById(R.id.btnDelete);
+        ViewHolder(View v) {
+            super(v);
+            imgMeal = v.findViewById(R.id.imgMeal);
+            tvMealName = v.findViewById(R.id.tvMealName);
+            tvDescription = v.findViewById(R.id.tvDescription);
+            tvPortions = v.findViewById(R.id.tvPortions);
+            tvExpiresAt = v.findViewById(R.id.tvExpiresAt);
+            tvClaimedAt = v.findViewById(R.id.tvClaimedAt);
+            tvPrice = v.findViewById(R.id.tvPrice);
+            tvDiscount = v.findViewById(R.id.tvDiscount);
+            btnClaim = v.findViewById(R.id.btnClaim);
+            btnDelete = v.findViewById(R.id.btnDelete);
         }
     }
 }
