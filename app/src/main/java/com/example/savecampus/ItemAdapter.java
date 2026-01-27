@@ -71,8 +71,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
             Glide.with(context)
                     .load(item.getString("image_path"))
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.ic_launcher_background)
+                    .placeholder(R.drawable.placeholder_meal)
+                    .error(R.drawable.placeholder_error)
                     .into(holder.imgMeal);
 
             // ================= EXPIRY LOGIC =================
