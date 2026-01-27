@@ -2,6 +2,7 @@ package com.example.savecampus.ui.notifications;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +26,9 @@ import com.example.savecampus.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NotificationsFragment extends Fragment {
 
@@ -57,7 +60,10 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        String url = "http://10.0.2.2/mobileApp/get_notifications.php";
+        SharedPreferences prefs = requireContext().getSharedPreferences("SaveCampusPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("user_id", -1);
+
+        String url = "http://10.0.2.2/mobileApp/get_notifications.php?user_id=" + userId;
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
@@ -98,6 +104,9 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void clearNotifications() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("SaveCampusPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("user_id", -1);
+
         String url = "http://10.0.2.2/mobileApp/clear_notifications.php";
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
@@ -116,7 +125,14 @@ public class NotificationsFragment extends Fragment {
                     }
                 },
                 error -> Toast.makeText(getContext(), "Network error while clearing notifications", Toast.LENGTH_SHORT).show()
-        );
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("user_id", String.valueOf(userId));
+                return params;
+            }
+        };
 
         queue.add(request);
     }
