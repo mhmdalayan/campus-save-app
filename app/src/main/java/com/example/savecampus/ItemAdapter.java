@@ -84,9 +84,13 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             long diff = expiresDate.getTime() - System.currentTimeMillis();
 
             if (diff <= 0) {
-                holder.tvExpiresAt.setText("Expired");
-                holder.btnClaim.setEnabled(false);
-                holder.btnClaim.setAlpha(0.4f);
+                // Item expired - remove it from the list immediately
+                int pos = holder.getAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION) {
+                    items.remove(pos);
+                    notifyItemRemoved(pos);
+                }
+                return; // Exit early since item is removed
             } else {
                 long minutes = diff / (1000 * 60);
                 long hours = minutes / 60;
@@ -151,12 +155,24 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
                                     if (response.getBoolean("success")) {
                                         // 1. Update the UI locally
                                         int current = item.getInt("available_portions");
-                                        item.put("available_portions", current - 1);
-                                        notifyItemChanged(holder.getAdapterPosition());
-
+                                        int newPortions = current - 1;
+                                        
                                         // 2. TRIGGER NOTIFICATION
                                         String mealName = item.getString("name");
                                         sendNotificationToServer("You claimed: " + mealName);
+                                        
+                                        // 3. If portions reach zero, remove item from list
+                                        if (newPortions <= 0) {
+                                            int position = holder.getAdapterPosition();
+                                            if (position != RecyclerView.NO_POSITION) {
+                                                items.remove(position);
+                                                notifyItemRemoved(position);
+                                            }
+                                        } else {
+                                            // Otherwise, just update the portions
+                                            item.put("available_portions", newPortions);
+                                            notifyItemChanged(holder.getAdapterPosition());
+                                        }
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
