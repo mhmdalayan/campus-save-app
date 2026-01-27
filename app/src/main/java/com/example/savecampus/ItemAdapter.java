@@ -90,35 +90,52 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
                     .error(R.drawable.placeholder_error)
                     .into(holder.imgMeal);
 
-            // ================= EXPIRY LOGIC =================
-            String expiresRaw = item.getString("expires_at");
-            SimpleDateFormat sdf =
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-            Date expiresDate = sdf.parse(expiresRaw);
-
-            long diff = expiresDate.getTime() - System.currentTimeMillis();
-
-            if (diff <= 0) {
-                // Item expired - remove it from the list immediately
-                int pos = holder.getAdapterPosition();
-                if (pos != RecyclerView.NO_POSITION) {
-                    items.remove(pos);
-                    notifyItemRemoved(pos);
+            // ================= CLAIMED AT OR EXPIRY LOGIC =================
+            // Check if this is a claimed meal (has claimed_at field)
+            if (item.has("claimed_at") && !item.isNull("claimed_at")) {
+                // Show claimed timestamp
+                String claimedAt = item.getString("claimed_at");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                SimpleDateFormat displayFormat = new SimpleDateFormat("MMM dd, HH:mm", Locale.US);
+                
+                try {
+                    Date claimedDate = sdf.parse(claimedAt);
+                    holder.tvExpiresAt.setText("Claimed: " + displayFormat.format(claimedDate));
+                    holder.tvExpiresAt.setBackgroundColor(0xFF4CAF50); // Green background
+                } catch (Exception e) {
+                    holder.tvExpiresAt.setText("Claimed");
                 }
-                return; // Exit early since item is removed
             } else {
-                long minutes = diff / (1000 * 60);
-                long hours = minutes / 60;
-                long days = hours / 24;
+                // Regular expiry logic for available meals
+                String expiresRaw = item.getString("expires_at");
+                SimpleDateFormat sdf =
+                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                Date expiresDate = sdf.parse(expiresRaw);
 
-                if (hours < 24) {
-                    holder.tvExpiresAt.setText(
-                            "Expires in " + hours + "h " + (minutes % 60) + "m"
-                    );
-                } else if (days == 1) {
-                    holder.tvExpiresAt.setText("Expires tomorrow");
+                long diff = expiresDate.getTime() - System.currentTimeMillis();
+
+                if (diff <= 0) {
+                    // Item expired - remove it from the list immediately
+                    int pos = holder.getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        items.remove(pos);
+                        notifyItemRemoved(pos);
+                    }
+                    return; // Exit early since item is removed
                 } else {
-                    holder.tvExpiresAt.setText("Expires " + expiresRaw);
+                    long minutes = diff / (1000 * 60);
+                    long hours = minutes / 60;
+                    long days = hours / 24;
+
+                    if (hours < 24) {
+                        holder.tvExpiresAt.setText(
+                                "Expires in " + hours + "h " + (minutes % 60) + "m"
+                        );
+                    } else if (days == 1) {
+                        holder.tvExpiresAt.setText("Expires tomorrow");
+                    } else {
+                        holder.tvExpiresAt.setText("Expires " + expiresRaw);
+                    }
                 }
             }
 
