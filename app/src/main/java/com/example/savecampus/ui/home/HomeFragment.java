@@ -59,6 +59,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        loadMeals(); // Reload meals when fragment becomes visible
         startAutoRefresh();
     }
 
@@ -85,6 +86,11 @@ public class HomeFragment extends Fragment {
         if (refreshHandler != null && refreshRunnable != null) {
             refreshHandler.removeCallbacks(refreshRunnable);
         }
+    }
+
+    // Public method to allow external refresh
+    public void loadMealsPublic() {
+        loadMeals();
     }
 
     private void loadMeals() {

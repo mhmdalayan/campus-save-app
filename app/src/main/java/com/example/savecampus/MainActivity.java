@@ -7,6 +7,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.navigation.NavController;
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private SearchView searchView;
+    private ActivityResultLauncher<Intent> addMealLauncher;
+    private ActivityResultLauncher<Intent> addMealLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +56,17 @@ public class MainActivity extends AppCompatActivity {
 
         NavigationUI.setupWithNavController(binding.navView, navController);
 
+        // Setup ActivityResultLauncher for adding meals
+        addMealLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        // Meal was added successfully, refresh HomeFragment
+                        refreshHomeFragment();
+                    }
+                }
+        );
+
         // --- Admin-only FAB logic ---
         FloatingActionButton fabAdd = findViewById(R.id.fabAdd);
 
@@ -65,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         fabAdd.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, AddItemActivity.class))
+                addMealLauncher.launch(new Intent(MainActivity.this, AddItemActivity.class))
         );
     }
 
@@ -110,6 +125,20 @@ public class MainActivity extends AppCompatActivity {
                         ((HomeFragment) fragment).filterMeals(query);
                         break;
                     }
+                }
+            }
+        }
+    }
+
+    private void refreshHomeFragment() {
+        androidx.fragment.app.Fragment navHostFragment = getSupportFragmentManager()
+            .findFragmentById(R.id.nav_host_fragment_activity_main);
+            
+        if (navHostFragment != null) {
+            for (androidx.fragment.app.Fragment fragment : navHostFragment.getChildFragmentManager().getFragments()) {
+                if (fragment instanceof HomeFragment) {
+                    ((HomeFragment) fragment).loadMealsPublic();
+                    break;
                 }
             }
         }

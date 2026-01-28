@@ -176,6 +176,7 @@ public class AddItemActivity extends AppCompatActivity {
                             Toast.makeText(this,
                                     "Meal added successfully",
                                     Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK); // Signal that meal was added
                             finish();
                         } else {
                             Toast.makeText(this,
