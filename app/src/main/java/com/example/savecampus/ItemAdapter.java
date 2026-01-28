@@ -291,7 +291,64 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
                 .show();
     }
 
-    private void deleteMeal(JSONObject item, ViewHolder holder) { /* unchanged */ }
+    private void deleteMeal(JSONObject item, ViewHolder holder) {
+        try {
+            int mealId = item.getInt("id");
+
+            String url = "http://10.0.2.2/mobileApp/deletedish.php";
+
+            com.android.volley.toolbox.StringRequest request =
+                    new com.android.volley.toolbox.StringRequest(
+                            com.android.volley.Request.Method.POST,
+                            url,
+                            response -> {
+                                try {
+                                    JSONObject json = new JSONObject(response);
+
+                                    if (json.getBoolean("success")) {
+                                        int pos = holder.getAdapterPosition();
+                                        if (pos != RecyclerView.NO_POSITION) {
+                                            items.remove(pos);
+                                            notifyItemRemoved(pos);
+                                        }
+                                    } else {
+                                        android.widget.Toast.makeText(
+                                                context,
+                                                json.optString("message", "Delete failed"),
+                                                android.widget.Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+
+                                } catch (Exception e) {
+                                    android.widget.Toast.makeText(
+                                            context,
+                                            "Bad server response",
+                                            android.widget.Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            },
+                            error -> android.widget.Toast.makeText(
+                                    context,
+                                    "Network error",
+                                    android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                    ) {
+                        @Override
+                        protected java.util.Map<String, String> getParams() {
+                            java.util.Map<String, String> p = new java.util.HashMap<>();
+                            p.put("meal_id", String.valueOf(mealId));
+                            return p;
+                        }
+                    };
+
+            com.android.volley.toolbox.Volley
+                    .newRequestQueue(context)
+                    .add(request);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public int getItemCount() {

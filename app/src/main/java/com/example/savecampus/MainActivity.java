@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private SearchView searchView;
     private ActivityResultLauncher<Intent> addMealLauncher;
-    private ActivityResultLauncher<Intent> addMealLauncher;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
