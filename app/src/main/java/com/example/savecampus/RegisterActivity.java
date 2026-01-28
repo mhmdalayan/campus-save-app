@@ -16,6 +16,7 @@ public class RegisterActivity extends AppCompatActivity {
                     .replace(R.id.register_fragment_container, new RegisterFragment())
                     .commit();
         }
+
     }
 }
 

@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -98,6 +99,13 @@ public class RegisterFragment extends Fragment {
 
             registerUser(name, email, password, role, adminCode);
         });
+        TextView tvGoToLogin = view.findViewById(R.id.tvGoToLogin);
+
+        tvGoToLogin.setOnClickListener(v -> {
+            startActivity(new Intent(getActivity(), LoginActivity.class));
+            requireActivity().finish();
+        });
+
 
         return view;
     }
